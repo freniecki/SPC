@@ -5,15 +5,21 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class S3Service {
@@ -40,12 +46,12 @@ public class S3Service {
     /**
      * Uploading files to the system
      */
-    public String uploadFile(String key, File file) {
-        s3.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(key).build(), file.toPath()
-        );
+    public String uploadFile(String key, InputStream inputStream, long contentLength, String fileType) {
+        s3.putObject(PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .contentType(fileType)
+                .build(), RequestBody.fromInputStream(inputStream, contentLength));
         return key;
     }
 
@@ -64,5 +70,17 @@ public class S3Service {
 
     public void deleteFile(String key) {
         s3.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build());
+    }
+
+    public List<String> listFiles(String prefix) {
+        List<String> fileNames = new ArrayList<>();
+        // get all objects by prefix(userid + '/')
+        ListObjectsV2Request request = ListObjectsV2Request.builder()
+                .bucket(bucketName)
+                .prefix(prefix)
+                .build();
+        ListObjectsV2Response response = s3.listObjectsV2(request);
+        response.contents().forEach(object -> fileNames.add(object.key()));
+        return fileNames;
     }
 }

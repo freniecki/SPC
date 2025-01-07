@@ -1,6 +1,11 @@
 package spc.cloud.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +17,8 @@ import spc.cloud.service.FileService;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +40,7 @@ public class FileController {
         try {
             //String userId = oauth2User.getAttribute("sub");
             //TODO delete, only for test purposes
-            String userId = UUID.randomUUID().toString();
+            String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
             Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
             User user = userOptional.orElse(null);
             if (user == null) {
@@ -45,10 +52,12 @@ public class FileController {
             }
             //todo delete code above
 
-            File file = new File(System.getProperty("java.io.tmpdir") + "/" + multipartFile.getOriginalFilename());
-            multipartFile.transferTo(file);
-
-            fileService.uploadFile(UUID.fromString(userId), file, multipartFile.getContentType());
+            fileService.uploadFile(
+                    UUID.fromString(userId),
+                    multipartFile.getInputStream(),
+                    multipartFile.getOriginalFilename(),
+                    multipartFile.getContentType(),
+                    multipartFile.getSize());
             return "File uploaded successfully!";
         } catch (Exception e) {
             e.printStackTrace();
@@ -61,7 +70,7 @@ public class FileController {
         try {
             //String userId = oauth2User.getAttribute("sub");
             //TODO delete, only for test purposes
-            String userId = UUID.randomUUID().toString();
+            String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
             Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
             User user = userOptional.orElse(null);
             if (user == null) {
@@ -73,17 +82,19 @@ public class FileController {
             }
             //todo delete code above
 
-            List<File> files = multipartFiles.stream().map(multipartFile -> {
+            multipartFiles.forEach(multipartFile -> {
                 try {
-                    File tempFile = File.createTempFile("upload_", multipartFile.getOriginalFilename());
-                    multipartFile.transferTo(tempFile);
-                    return tempFile;
+                    fileService.uploadFile(
+                            UUID.fromString(userId),
+                            multipartFile.getInputStream(),
+                            multipartFile.getOriginalFilename(),
+                            multipartFile.getContentType(),
+                            multipartFile.getSize());
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to upload file: " + multipartFile.getOriginalFilename(), e);
                 }
-            }).collect(Collectors.toList());
+            });
 
-            fileService.uploadFiles(UUID.fromString(userId), files, "application/octet-stream");
             return "File batch uploaded successfully!";
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,10 +103,10 @@ public class FileController {
     }
 
     @PostMapping("/download/{fileName}")
-    public String uploadFile(@AuthenticationPrincipal OAuth2User oauth2User, @PathVariable String fileName) {
+    public ResponseEntity<Resource> uploadFile(@AuthenticationPrincipal OAuth2User oauth2User, @PathVariable String fileName) {
         //String userId = oauth2User.getAttribute("sub");
         //TODO delete, only for test purposes
-        String userId = UUID.randomUUID().toString();
+        String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
         Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
         User user = userOptional.orElse(null);
         if (user == null) {
@@ -106,8 +117,46 @@ public class FileController {
             userRepository.save(user);
         }
         //todo delete code above
-        String downloadPath = System.getProperty("java.io.tmpdir") + "/" + fileName;
-        fileService.downloadFile(UUID.fromString(userId), fileName, downloadPath);
-        return "File downloaded to: " + downloadPath;
+        try {
+            // Download file to a temporary path
+            String tempFilePath = System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID() + "_" + fileName;
+            File downloadedFile = fileService.downloadFile(UUID.fromString(userId), fileName, tempFilePath);
+
+            // Prepare file resource for download
+            Path filePath = downloadedFile.toPath();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("Failed to download file: " + fileName);
+            }
+
+            // Set headers for file download
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to download file: " + fileName, e);
+        }
     }
+
+    @GetMapping("/list")
+    public List<UserFile> listUserFiles(@AuthenticationPrincipal OAuth2User oauth2User) {
+        //String userId = oauth2User.getAttribute("sub");
+        //TODO replace with actual authenticated userId
+        String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        User user = userOptional.orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setUserId(UUID.fromString(userId));
+            user.setEmail("email");
+            user.setName("username");
+            userRepository.save(user);
+        }
+
+        return fileService.getUserFiles(UUID.fromString(userId));
+    }
+
 }

@@ -14,5 +14,6 @@ public class WebConfiguration implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("home");
         registry.addViewController("/upload").setViewName("upload");
+        registry.addViewController("/files").setViewName("files");
     }
 }

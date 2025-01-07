@@ -2,6 +2,7 @@ package spc.cloud.entity;
 
 import jakarta.persistence.*;
 
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -20,6 +21,15 @@ public class UserFile {
     private String fileType;
     private long fileSize;
     private String s3Key;
+    private URL presignedUrl;
+
+    public URL getPresignedUrl() {
+        return presignedUrl;
+    }
+
+    public void setPresignedUrl(URL presignedUrl) {
+        this.presignedUrl = presignedUrl;
+    }
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
