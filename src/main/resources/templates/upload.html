@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title> Upload files </title>
+</head>
+<body>
+<h1>Upload Files</h1>
+<!-- HTML5 Input Form Elements -->
+<input type="file" id="fileInput" multiple>
+<button id="upload-button" onclick="uploadFiles()"> Upload </button>
+<div class="file-list">
+    <h2>Selected Files for Upload</h2>
+    <ul id="fileList"></ul>
+</div>
+<script>
+    let selectedFiles = [];
+    
+    // Handle file selection
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+        selectedFiles = Array.from(event.target.files);
+        updateFileList();
+    });
+    
+    // Update the file list on the UI
+    function updateFileList() {
+        const fileList = document.getElementById('fileList');
+        fileList.innerHTML = ''; // Clear the list before updating
+        
+        selectedFiles.forEach(file => {
+            const listItem = document.createElement('li');
+            listItem.className = 'file-item';
+            listItem.textContent = file.name;
+            fileList.appendChild(listItem);
+        });
+    }
+    
+    async function uploadFiles() {
+        let formData = new FormData();
+        selectedFiles.forEach(file => {
+            formData.append('files', file);
+        });
+        try {
+            const response = await fetch('/files/upload/batch', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                alert("Files uploaded successfully!");
+                selectedFiles = []; // Clear selected files
+                updateFileList();
+            } else {
+                alert("Failed to upload files.");
+            }
+        } catch (error) {
+            console.error('Error uploading files:', error);
+            alert("Failed to upload files.");
+        }
+    }
+</script>
+
+</body>
+</html>
