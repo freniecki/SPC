@@ -1,5 +1,8 @@
 package spc.cloud.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -17,12 +20,10 @@ import spc.cloud.service.FileService;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/files")
@@ -35,8 +36,14 @@ public class FileController {
         this.fileService = fileService;
     }
 
+
+    @Operation(summary = "Upload file", description = "User uploads one file to the system", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "File was uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "File upload failed")
+    })
     @PostMapping("/upload")
-    public String uploadFile(@AuthenticationPrincipal OAuth2User oauth2User, @RequestParam("file") MultipartFile multipartFile) {
+    public ResponseEntity<?> uploadFile(@AuthenticationPrincipal OAuth2User oauth2User, @RequestParam("file") MultipartFile multipartFile) {
         try {
             //String userId = oauth2User.getAttribute("sub");
             //TODO delete, only for test purposes
@@ -58,15 +65,20 @@ public class FileController {
                     multipartFile.getOriginalFilename(),
                     multipartFile.getContentType(),
                     multipartFile.getSize());
-            return "File uploaded successfully!";
+            return ResponseEntity.ok("File uploaded successfully");
         } catch (Exception e) {
             e.printStackTrace();
-            return "File upload failed.";
+            return ResponseEntity.status(400).body("File upload failed.");
         }
     }
 
+    @Operation(summary = "Upload files in batch", description = "User uploads many files in a batch to the system", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "All files were uploaded successfully"),
+            @ApiResponse(responseCode = "400", description = "File upload failed")
+    })
     @PostMapping("/upload/batch")
-    public String uploadFileBatch(@AuthenticationPrincipal OAuth2User oauth2User, @RequestParam("files") List<MultipartFile> multipartFiles) {
+    public ResponseEntity<?> uploadFileBatch(@AuthenticationPrincipal OAuth2User oauth2User, @RequestParam("files") List<MultipartFile> multipartFiles) {
         try {
             //String userId = oauth2User.getAttribute("sub");
             //TODO delete, only for test purposes
@@ -95,13 +107,18 @@ public class FileController {
                 }
             });
 
-            return "File batch uploaded successfully!";
+            return ResponseEntity.ok("File batch uploaded successfully!");
         } catch (Exception e) {
             e.printStackTrace();
-            return "File upload failed.";
+            return ResponseEntity.status(400).body("File upload failed.");
         }
     }
 
+    @Operation(summary = "Download file", description = "User downloads file", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "File download was successful"),
+            @ApiResponse(responseCode = "500", description = "File download failed")
+    })
     @PostMapping("/download/{fileName}")
     public ResponseEntity<Resource> uploadFile(@AuthenticationPrincipal OAuth2User oauth2User, @PathVariable String fileName) {
         //String userId = oauth2User.getAttribute("sub");
@@ -141,6 +158,10 @@ public class FileController {
         }
     }
 
+    @Operation(summary = "List files", description = "List all user files", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "List of all user files")
+    })
     @GetMapping("/list")
     public List<UserFile> listUserFiles(@AuthenticationPrincipal OAuth2User oauth2User) {
         //String userId = oauth2User.getAttribute("sub");
