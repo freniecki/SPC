@@ -13,6 +13,19 @@
         .action-btn {
             margin-right: 5px;
         }
+        .floating-btn {
+             position: fixed;
+             bottom: 20px;
+             right: 20px;
+             width: 60px;
+             height: 60px;
+             border-radius: 50%;
+             font-size: 24px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+         }
     </style>
 </head>
 <body>
@@ -34,9 +47,18 @@
         </table>
     </div>
 </div>
+<div id="notification" class="alert alert-success mt-2" style="display: none;">
+    <!--notification -->
+</div>
+
+<!-- Floating Button -->
+<a href="/upload" class="btn btn-primary floating-btn">
+    +
+</a>
 
 <!-- JavaScript to Fetch and Render Data -->
 <script>
+    const notification = document.getElementById('notification');
     document.addEventListener("DOMContentLoaded", function () {
         fetch('/files/list')
                 .then(response => {
@@ -65,7 +87,9 @@
                 })
                 .catch(error => {
                     console.error('Error fetching file list:', error);
-                    alert('Failed to load files. Please try again later.');
+                    notification.style.display = 'block';
+                    notification.className = 'alert alert-danger mt-2';
+                    notification.innerHTML = `<p>Failed to load files. Please try again later.</p>`;
                 });
     });
 </script>
