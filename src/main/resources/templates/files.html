@@ -4,36 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Files</title>
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
+        .navbar {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .page-title {
+            color: #2c3e50;
+            margin: 2rem 0;
+            font-weight: 600;
+        }
         .table-container {
-            margin-top: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,.05);
+            padding: 20px;
+            margin: 20px 0;
         }
         .action-btn {
             margin-right: 5px;
         }
-        .floating-btn {
-             position: fixed;
-             bottom: 20px;
-             right: 20px;
-             width: 60px;
-             height: 60px;
-             border-radius: 50%;
-             font-size: 24px;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-         }
+        .table thead th {
+            background-color: #2c3e50;
+            color: white;
+            font-weight: 500;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
     </style>
 </head>
-<body>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-light mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">AWS Cognito Demo</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/upload">Upload Files</a>
+        </div>
+    </div>
+</nav>
+
 <div class="container">
-    <h1 class="mt-4">User Files</h1>
+    <h1 class="page-title">User Files</h1>
     <div class="table-container">
-        <table class="table table-striped table-bordered">
-            <thead class="table-dark">
+        <table class="table table-striped">
+            <thead>
             <tr>
                 <th>File Name</th>
                 <th>File Type</th>
@@ -42,59 +58,56 @@
             </tr>
             </thead>
             <tbody id="file-table-body">
-            <!-- Rows will be dynamically added here -->
             </tbody>
         </table>
     </div>
 </div>
-<div id="notification" class="alert alert-success mt-2" style="display: none;">
-    <!--notification -->
-</div>
 
-<!-- Floating Button -->
-<a href="/upload" class="btn btn-primary floating-btn">
-    +
-</a>
-
-<!-- JavaScript to Fetch and Render Data -->
 <script>
-    const notification = document.getElementById('notification');
     document.addEventListener("DOMContentLoaded", function () {
         fetch('/files/list')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch file list');
-                    }
-                    return response.json();
-                })
-                .then(files => {
-                    const tableBody = document.getElementById('file-table-body');
-                    files.forEach(file => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch file list');
+                }
+                return response.json();
+            })
+            .then(files => {
+                const tableBody = document.getElementById('file-table-body');
+                files.forEach(file => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
                             <td>${file.fileName}</td>
                             <td>${file.fileType}</td>
                             <td>${(file.fileSize / 1024).toFixed(2)}</td>
                             <td>
-                                <a href="${file.presignedUrl}" target="_blank" class="btn btn-sm btn-primary action-btn">View</a>
+                                <a href="${file.presignedUrl}" target="_blank" class="btn btn-sm btn-primary action-btn">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
                                 <form action="/files/download/${file.fileName}" method="post" style="display:inline;">
-                                    <button type="submit" class="btn btn-sm btn-success action-btn">Download</button>
+                                    <button type="submit" class="btn btn-sm btn-success action-btn">
+                                        <i class="bi bi-download"></i> Download
+                                    </button>
                                 </form>
                             </td>
                         `;
-                        tableBody.appendChild(row);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching file list:', error);
-                    notification.style.display = 'block';
-                    notification.className = 'alert alert-danger mt-2';
-                    notification.innerHTML = `<p>Failed to load files. Please try again later.</p>`;
+                    tableBody.appendChild(row);
                 });
+            })
+            .catch(error => {
+                console.error('Error fetching file list:', error);
+                const alert = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            Failed to load files. Please try again later.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                document.querySelector('.table-container').insertAdjacentHTML('beforebegin', alert);
+            });
     });
 </script>
 
-<!-- Bootstrap JS (Optional if you need interactive components) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 </body>
 </html>
