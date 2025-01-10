@@ -9,6 +9,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import spc.cloud.entity.User;
 import spc.cloud.repository.UserRepository;
+import spc.cloud.service.LogService;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -18,6 +19,12 @@ public class CognitoAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private UserRepository userRepository;
+
+    private LogService logService;
+
+    public CognitoAuthSuccessHandler(LogService logService) {
+        this.logService = logService;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -34,6 +41,8 @@ public class CognitoAuthSuccessHandler implements AuthenticationSuccessHandler {
         user.setUserId(UUID.fromString(userId));
         user.setName(username);
         userRepository.save(user);
+
+        logService.putLogEvent("USER AUTH SUCCESS: Username" + username + " userId " + userId);
 
         response.sendRedirect("/upload"); // Redirect to a default page after success
     }
