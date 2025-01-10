@@ -18,11 +18,13 @@ import java.util.stream.Collectors;
 @Service
 public class FileService {
     private final S3Service s3Service;
+    private final LogService logService;
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
 
-    public FileService(S3Service s3Service, FileRepository fileRepository, UserRepository userRepository) {
+    public FileService(S3Service s3Service, LogService logService, FileRepository fileRepository, UserRepository userRepository) {
         this.s3Service = s3Service;
+        this.logService = logService;
         this.fileRepository = fileRepository;
         this.userRepository = userRepository;
     }
@@ -41,6 +43,7 @@ public class FileService {
         uploadedFile.setS3Key(key);
         uploadedFile.setPresignedUrl(s3Service.generatePresignedUrl(key));
 
+        logService.putLogEvent("FILE UPLOAD (S3): User " + user.getUserId() + " File Key " + key);
         return fileRepository.save(uploadedFile);
     }
 
@@ -56,6 +59,7 @@ public class FileService {
      */
     public File downloadFile(UUID userId, String fileName, String downloadPath) {
         String key = userId + "/" + fileName;
+        logService.putLogEvent("FILE DOWNLOAD (S3): User " + userId.toString() + " File Key " + key);
         return s3Service.downloadFile(key, downloadPath);
     }
 
