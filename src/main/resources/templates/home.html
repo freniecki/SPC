@@ -4,34 +4,78 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AWS Cognito Demo App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .navbar {
+            background-color: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0,0,0,.1);
+        }
+        .welcome-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,.05);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .page-title {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        .user-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .btn-custom {
+            padding: 0.5rem 2rem;
+            font-weight: 500;
+        }
+    </style>
 </head>
-<body>
-<div>
-    <div>
-        <h1>AWS Cognito Demo App</h1>
+<body class="bg-light">
+<nav class="navbar navbar-expand-lg navbar-light mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">Сloud Application</a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="/files" sec:authorize="isAuthenticated()">View Files</a>
+            <a class="nav-link" href="/upload" sec:authorize="isAuthenticated()">Upload Files</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="welcome-container">
+        <h1 class="page-title">Welcome to Cloud Application</h1>
 
         <div sec:authorize="isAuthenticated()">
-            <div>
-                Hello, <strong th:text="${#authentication.name}"></strong>!
-                <br>
-                <br>
+            <div class="mb-4">
+                <h4>Hello, <span class="text-primary" th:text="${#authentication.name}"></span>!</h4>
             </div>
-            <div>
-                Here are all the OIDC properties you can use: <div th:text="${#authentication.getPrincipal()}"/>
-                <br>
-                <br>
+
+            <div class="user-info mb-4">
+                <h5 class="mb-3">Your OIDC Properties:</h5>
+                <pre class="bg-white p-3 rounded"><code th:text="${#authentication.getPrincipal()}"></code></pre>
             </div>
+
             <div>
-                <a th:href="@{/logout}"><button>Log out</button></a>
+                <a th:href="@{/logout}" class="btn btn-danger btn-custom">
+                    <i class="bi bi-box-arrow-right"></i> Log out
+                </a>
             </div>
         </div>
 
         <div sec:authorize="isAnonymous()">
-            <div>
-                <a th:href="@{/oauth2/authorization/cognito}"><button>Log in</button></a>
-            </div>
+            <p class="lead mb-4">Please log in to access the file management system.</p>
+            <a th:href="@{/oauth2/authorization/cognito}" class="btn btn-primary btn-custom">
+                <i class="bi bi-box-arrow-in-right"></i> Log in
+            </a>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
 </body>
 </html>
