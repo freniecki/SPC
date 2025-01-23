@@ -74,6 +74,23 @@ public class FileService {
         return s3Service.downloadFile(key, downloadPath);
     }
 
+    /**
+     * Download a specific version of a file from S3.
+     *
+     * @param userId      the ID of the user.
+     * @param fileName    the name of the file.
+     * @param versionId   the specific version ID of the file.
+     * @param downloadPath the local path to download the file.
+     * @return the downloaded file.
+     */
+
+    public File downloadFileVersion(UUID userId, String fileName, String versionId, String downloadPath) {
+        String key = userId + "/" + fileName;
+        logService.putLogEvent("FILE VERSION DOWNLOAD (S3): User " + userId.toString() + " File Key " + key + " Version " + versionId);
+        return s3Service.downloadFileVersion(key, versionId, downloadPath);
+    }
+
+
     public List<String> listFileKeys(UUID userId) {
         String prefix = userId.toString() + "/";
         return s3Service.listFiles(prefix);
