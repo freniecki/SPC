@@ -1,12 +1,11 @@
 package spc.cloud;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -19,32 +18,25 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 public class SecurityConfiguration {
 
-    @Autowired
-    private CognitoAuthSuccessHandler cognitoAuthSuccessHandler;
+    private final CognitoAuthSuccessHandler cognitoAuthSuccessHandler;
+    private final CognitoLogoutHandler cognitoLogoutHandler;
+
+    SecurityConfiguration(CognitoAuthSuccessHandler cognitoAuthSuccessHandler, CognitoLogoutHandler cognitoLogoutHandler) {
+        this.cognitoAuthSuccessHandler = cognitoAuthSuccessHandler;
+        this.cognitoLogoutHandler = cognitoLogoutHandler;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-//        CognitoLogoutHandler cognitoLogoutHandler = new CognitoLogoutHandler();
-//
-//        http.csrf(Customizer.withDefaults())
-//                .authorizeHttpRequests(authz -> authz
-//                        .requestMatchers("/").permitAll()
-//                        .anyRequest()
-//                        .authenticated())
-//                .oauth2Login(oauth2 -> oauth2
-//                    .successHandler(cognitoAuthSuccessHandler)
-//                )
-//                .logout(logout -> logout.logoutSuccessHandler(cognitoLogoutHandler));
-//        return http.build();
-        //TODO for development, delete
-        http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF for simplicity in development
+        http.csrf(Customizer.withDefaults())
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .anyRequest().permitAll()) // Allow all requests without authentication
-                .oauth2Login(oauth2 -> oauth2
-                        .successHandler(cognitoAuthSuccessHandler)) // Disable OAuth2 Login
-                .logout(logout -> logout.disable()); // Disable Logout
-
+                        .requestMatchers("/").permitAll()
+                        .anyRequest().authenticated())
+                .oauth2Login(oath2 -> oath2
+                        .successHandler(cognitoAuthSuccessHandler))
+                .logout(logout -> logout
+                        .logoutSuccessHandler(cognitoLogoutHandler));
         return http.build();
     }
 }

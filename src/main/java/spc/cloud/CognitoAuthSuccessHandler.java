@@ -3,7 +3,6 @@ package spc.cloud;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -17,13 +16,12 @@ import java.util.UUID;
 @Component
 public class CognitoAuthSuccessHandler implements AuthenticationSuccessHandler {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final LogService logService;
 
-    private LogService logService;
-
-    public CognitoAuthSuccessHandler(LogService logService) {
+    public CognitoAuthSuccessHandler(LogService logService, UserRepository userRepository) {
         this.logService = logService;
+        this.userRepository = userRepository;
     }
 
     @Override
