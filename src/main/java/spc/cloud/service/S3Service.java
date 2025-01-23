@@ -80,6 +80,14 @@ public class S3Service {
         return destinationFile;
     }
 
+    // Downloading a specific version of a file from S3
+    public File downloadFileVersion(String key, String versionId, String downloadPath) {
+        // Download a specific version using the version ID
+        File destinationFile = new File(downloadPath);
+        s3.getObject(b -> b.bucket(bucketName).key(key).versionId(versionId), destinationFile.toPath());
+        return destinationFile;
+    }
+
     public void deleteFile(String key) {
         s3.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(key).build());
     }
