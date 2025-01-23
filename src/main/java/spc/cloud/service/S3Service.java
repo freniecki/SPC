@@ -9,10 +9,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
-import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.File;
 import java.io.InputStream;
@@ -41,6 +38,21 @@ public class S3Service {
         }
 
         this.s3 = builder.build();
+        
+        enableBucketVersioning(this.bucketName);
+    }
+    
+    public void enableBucketVersioning(String bucketName) {
+        try {
+            s3.putBucketVersioning(PutBucketVersioningRequest.builder()
+                    .bucket(bucketName)
+                    .versioningConfiguration(VersioningConfiguration.builder()
+                            .status(BucketVersioningStatus.ENABLED)
+                            .build())
+                    .build());
+        } catch (Exception e) {
+            System.err.println("Failed to enable versioning for bucket " + bucketName + ": " + e.getMessage());
+        }
     }
 
     /**
@@ -81,6 +93,11 @@ public class S3Service {
                 .build();
         ListObjectsV2Response response = s3.listObjectsV2(request);
         response.contents().forEach(object -> fileNames.add(object.key()));
+        System.out.println("Found " + fileNames.size() + " files in bucket " + bucketName);
         return fileNames;
+    }
+
+    public ListObjectVersionsResponse listObjectVersions(String prefix) {
+        return s3.listObjectVersions(b -> b.bucket(bucketName).prefix(prefix));
     }
 }

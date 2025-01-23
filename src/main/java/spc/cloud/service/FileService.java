@@ -2,6 +2,7 @@ package spc.cloud.service;
 
 
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.ListObjectVersionsResponse;
 import spc.cloud.entity.User;
 import spc.cloud.entity.UserFile;
 import spc.cloud.repository.FileRepository;
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,13 @@ public class FileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String key = userId + "/" + fileName;
+
+        // Check if the file already exists
+        UserFile existingFile = fileRepository.findUserFileByS3Key(key);
+        if (existingFile != null) {
+            fileRepository.delete(existingFile);
+        }
+
         s3Service.uploadFile(key, inputStream, fileSize, fileType);
 
         UserFile uploadedFile = new UserFile();
@@ -42,6 +51,8 @@ public class FileService {
         uploadedFile.setFileSize(fileSize);
         uploadedFile.setS3Key(key);
         uploadedFile.setPresignedUrl(s3Service.generatePresignedUrl(key));
+        uploadedFile.setVersionId("");
+        uploadedFile.setIsLatest(true);
 
         logService.putLogEvent("FILE UPLOAD (S3): User " + user.getUserId() + " File Key " + key);
         return fileRepository.save(uploadedFile);
@@ -75,5 +86,44 @@ public class FileService {
                 userFiles.add(this.fileRepository.findUserFileByS3Key(key))
         );
         return userFiles;
+    }
+    
+    
+    /**
+     * Fetches all file versions for a user from S3. 
+     * File versions are exclusively stored in S3 and should be downloaded from there.
+     * In the database, only the latest version of a file is stored.
+     * The UserFile objects returned by this method are not fully populated 
+     * and are intended to be used within the file versioning system or page.
+     *
+     * @param userId the ID of the user whose file versions are to be fetched.
+     * @return a list of UserFile objects representing the file versions in S3.
+     */
+    public List<UserFile> getFileVersions(UUID userId) {
+        Optional<User> user = userRepository.findById(userId);
+
+        try {
+            ListObjectVersionsResponse versionsResponse = s3Service.listObjectVersions(userId.toString() + "/");
+            if (versionsResponse.versions() == null || versionsResponse.versions().isEmpty()) {
+                return new ArrayList<>();
+            }
+            return versionsResponse.versions().stream().map(v -> {
+                UserFile userFile = new UserFile();
+                userFile.setFileName(v.key());
+                userFile.setFileType(null); // Set appropriate values if available
+                userFile.setFileSize(0); // Set appropriate values if available
+                userFile.setS3Key(v.key());
+                userFile.setPresignedUrl(s3Service.generatePresignedUrl(v.key())); // Set appropriate values if available
+                userFile.setVersionId(v.versionId());
+                userFile.setIsLatest(v.isLatest());
+                userFile.setUser(user.orElse(null)); // Set appropriate values if available
+                userFile.setFileId(null);
+                userFile.setFileSize(v.size() != null ? v.size() : 0);
+                return userFile;
+            }).collect(Collectors.toList());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 }

@@ -22,6 +22,8 @@ public class UserFile {
     private long fileSize;
     private String s3Key;
     private URL presignedUrl;
+    private String versionId;
+    private boolean isLatest;
 
     public URL getPresignedUrl() {
         return presignedUrl;
@@ -88,5 +90,21 @@ public class UserFile {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getVersionId() {
+        return versionId;
+    }
+
+    public void setVersionId(String versionId) {
+        this.versionId = versionId;
+    }
+
+    public boolean isLatest() {
+        return isLatest;
+    }
+
+    public void setIsLatest(boolean latest) {
+        isLatest = latest;
     }
 }

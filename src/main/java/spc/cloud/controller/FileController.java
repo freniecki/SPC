@@ -180,4 +180,33 @@ public class FileController {
         return fileService.getUserFiles(UUID.fromString(userId));
     }
 
+
+
+    @Operation(summary = "List object versions", description = "Retrieve a list of object versions", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of object versions"),
+            @ApiResponse(responseCode = "500", description = "Failed to retrieve object versions")
+    })
+
+    @GetMapping("/versions")
+    public ResponseEntity<?> listObjectVersions(@AuthenticationPrincipal OAuth2User oauth2User) {
+        //String userId = oauth2User.getAttribute("sub");
+        //TODO replace with actual authenticated userId
+        String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        User user = userOptional.orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setUserId(UUID.fromString(userId));
+            user.setEmail("email");
+            user.setName("username");
+            userRepository.save(user);
+        }
+        try {
+            return ResponseEntity.ok(fileService.getFileVersions(UUID.fromString(userId)));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Failed to fetch object versions.");
+        }
+    }
 }
