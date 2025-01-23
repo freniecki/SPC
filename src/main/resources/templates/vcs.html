@@ -52,6 +52,7 @@
       <thead>
       <tr>
         <th>File Name</th>
+        <th>Created at</th>
         <th>Version ID</th>
         <th>File Size (KB)</th>
         <th>Is Latest</th>
@@ -73,7 +74,7 @@
               if (!response.ok) {
                 throw new Error('Failed to fetch file versions');
               }
-              return response.json();z
+              return response.json();
             })
             .then(fileVersions => {
               const tableBody = document.getElementById('file-version-table-body');
@@ -81,9 +82,10 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                         <td>${file.fileName}</td>
+                        <td>${file.createdAt}</td>
                         <td>${file.versionId}</td>
                         <td>${(file.fileSize / 1024).toFixed(2)}</td>
-                        <td>${file.isLatest ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                        <td>${file.latest ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-secondary">No</span>'}</td>
                         <td>
                             <a href="${file.presignedUrl}" target="_blank" class="btn btn-sm btn-primary action-btn">
                                 <i class="bi bi-eye"></i> View
