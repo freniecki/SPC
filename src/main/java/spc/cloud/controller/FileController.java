@@ -158,6 +158,59 @@ public class FileController {
         }
     }
 
+    @Operation(summary = "Download a specific version of a file", description = "User downloads a specific version of a file", tags = "Files")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "File version download was successful"),
+            @ApiResponse(responseCode = "500", description = "File version download failed")
+    })
+    @GetMapping("/download/{fileName}")
+    public ResponseEntity<Resource> downloadFileVersion(
+            @AuthenticationPrincipal OAuth2User oauth2User,
+            @PathVariable String fileName,
+            @RequestParam(required = false) String versionId) {
+
+        // Temporary userId for testing purposes
+        String userId = "d3a59249-bac8-4711-a47b-76778d18fcb5";
+
+        Optional<User> userOptional = userRepository.findById(UUID.fromString(userId));
+        User user = userOptional.orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setUserId(UUID.fromString(userId));
+            user.setEmail("email");
+            user.setName("username");
+            userRepository.save(user);
+        }
+
+        try {
+            // Generate the temporary file path for the download
+            String tempFilePath = System.getProperty("java.io.tmpdir") + "/" + UUID.randomUUID() + "_" + fileName;
+
+            // Call the file service to download the specific version
+            File downloadedFile = fileService.downloadFileVersion(
+                    UUID.fromString(userId), fileName, versionId, tempFilePath);
+
+            // Convert the file to a Resource for HTTP response
+            Path filePath = downloadedFile.toPath();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new RuntimeException("Failed to download file version: " + fileName);
+            }
+
+            // Set up HTTP response headers for file download
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
+                    .body(resource);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to download file version: " + fileName, e);
+        }
+    }
+
+
+
     @Operation(summary = "List files", description = "List all user files", tags = "Files")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "List of all user files")
