@@ -4,8 +4,12 @@ How Aleksiej launches the application:
 ```
 sudo docker run --rm -it -p 4566:4566 -p 4510-4559:4510-4559 -e SERVICES="s3,cognito-idp,logs" -e DEBUG=1 --name localstack localstack/localstack --network="host"
 ```
+```
+sudo docker exec -it localstack bash
+IN LOCALSTACK:  awslocal s3api create-bucket --bucket user-file-bucket
+```
 2. Start postgreSQL database. Script:
-```aiignore
+```
  kirsche@bash: cat ./pg_docker_run.sh
   
 docker run -d \
@@ -16,8 +20,6 @@ docker run -d \
   -e POSTGRES_DB=spc \
   postgres:latest
 ```
-`
-kirsche@bash sudo docker stop postgres_spc && sudo docker rm postgres_spc && sudo ./pg_docker_run.sh
-`
-3. Launch the java thing.
-4. GucciGang GucciGang GucciGang GucciGang 
+3.`kirsche@bash sudo docker stop postgres_spc && sudo docker rm postgres_spc && sudo ./pg_docker_run.sh`
+4. Launch the java thing.
+5. GucciGang GucciGang GucciGang GucciGang 
