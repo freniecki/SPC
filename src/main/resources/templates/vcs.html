@@ -80,8 +80,9 @@
               const tableBody = document.getElementById('file-version-table-body');
               fileVersions.forEach(file => {
                 const row = document.createElement('tr');
+                const cleanedFileName = file.fileName.split('/').pop();
                 row.innerHTML = `
-                        <td>${file.fileName}</td>
+                        <td>${cleanedFileName}</td>
                         <td>${file.createdAt}</td>
                         <td>${file.versionId}</td>
                         <td>${(file.fileSize / 1024).toFixed(2)}</td>
