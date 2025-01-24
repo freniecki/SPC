@@ -189,8 +189,11 @@
                 body: formData
             });
 
-            if (response.ok) {
-                showAlert('success', 'Files uploaded successfully!');
+            if (response.status == 303) {
+                showAlert('info', 'Files is being processed');
+                setTimeout(() => {
+                    showAlert('success', 'Files was uploaded successfully!');
+                }, 3000);
                 selectedFiles = [];
                 updateFileList();
             } else {

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -107,7 +108,7 @@ public class FileController {
                 }
             });
 
-            return ResponseEntity.ok("File batch uploaded successfully!");
+            return ResponseEntity.status(303).body("File batch uploaded on the client side successfully!");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(400).body("File upload failed.");
